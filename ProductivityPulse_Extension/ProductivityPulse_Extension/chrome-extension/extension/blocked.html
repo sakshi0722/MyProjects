@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Site Blocked — ProductivityPulse</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0f1117; color: #e2e8f0;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center;
+  }
+  .container { max-width: 480px; padding: 40px 24px; }
+  .icon { font-size: 72px; margin-bottom: 20px; }
+  h1 { font-size: 28px; font-weight: 800; color: #f87171; margin-bottom: 12px; }
+  p { color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+  .tip {
+    background: #13171f; border: 1px solid #1e2a3a; border-radius: 14px;
+    padding: 16px 20px; margin-bottom: 24px; font-size: 13px; color: #64748b;
+  }
+  .tip b { color: #60a5fa; }
+  .btn {
+    display: inline-block; padding: 12px 32px; background: #1d4ed8;
+    color: #fff; border-radius: 10px; font-weight: 700; font-size: 14px;
+    cursor: pointer; border: none; transition: background 0.2s;
+  }
+  .btn:hover { background: #2563eb; }
+  .btn-ghost {
+    background: #1e2a3a; color: #94a3b8; margin-left: 10px;
+  }
+  .btn-ghost:hover { background: #253347; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="icon">🚫</div>
+  <h1>Focus Mode Active</h1>
+  <p>This site has been blocked to help you stay productive. You've got this! 💪</p>
+  <div class="tip">
+    <b>Tip:</b> Focus Mode blocks distracting sites while it's enabled.
+    Turn it off from the ProductivityPulse popup if you need access.
+  </div>
+  <button class="btn" onclick="history.back()">← Go Back</button>
+  <button class="btn btn-ghost" onclick="window.close()">Close Tab</button>
+</div>
+</body>
+</html>

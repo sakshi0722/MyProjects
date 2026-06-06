@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ProductivityPulse</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    width: 380px;
+    min-height: 520px;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background: #0f1117;
+    color: #e2e8f0;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: linear-gradient(135deg, #1a1f2e 0%, #16213e 100%);
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid #1e2a3a;
+  }
+  .header-top { display: flex; justify-content: space-between; align-items: center; }
+  .logo { display: flex; align-items: center; gap: 8px; }
+  .logo-icon { font-size: 22px; }
+  .logo-text { font-size: 16px; font-weight: 700; color: #60a5fa; letter-spacing: 0.5px; }
+  .settings-btn {
+    background: none; border: none; color: #64748b; cursor: pointer;
+    font-size: 18px; padding: 4px; border-radius: 6px; transition: color 0.2s;
+  }
+  .settings-btn:hover { color: #60a5fa; }
+
+  /* SCORE RING */
+  .score-section {
+    display: flex; align-items: center; gap: 16px;
+    background: #0f1117; padding: 16px 20px;
+    border-bottom: 1px solid #1e2a3a;
+  }
+  .ring-container { position: relative; width: 80px; height: 80px; flex-shrink: 0; }
+  .ring-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke: #1e2a3a; stroke-width: 8; }
+  .ring-fill { fill: none; stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.8s ease; }
+  .ring-score {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    font-size: 20px; font-weight: 800; color: #fff;
+  }
+  .score-info { flex: 1; }
+  .score-label { font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .score-title { font-size: 18px; font-weight: 700; margin-bottom: 6px; }
+  .score-sub { font-size: 12px; color: #94a3b8; }
+
+  /* STATS ROW */
+  .stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    background: #13171f; border-bottom: 1px solid #1e2a3a;
+  }
+  .stat {
+    padding: 12px 8px; text-align: center; border-right: 1px solid #1e2a3a;
+  }
+  .stat:last-child { border-right: none; }
+  .stat-val { font-size: 18px; font-weight: 700; }
+  .stat-lbl { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }
+  .green { color: #4ade80; }
+  .red { color: #f87171; }
+  .blue { color: #60a5fa; }
+
+  /* TABS */
+  .tabs {
+    display: flex; background: #13171f;
+    border-bottom: 1px solid #1e2a3a;
+  }
+  .tab {
+    flex: 1; padding: 10px; text-align: center; font-size: 12px;
+    font-weight: 600; cursor: pointer; color: #64748b;
+    border-bottom: 2px solid transparent; transition: all 0.2s;
+  }
+  .tab.active { color: #60a5fa; border-bottom-color: #60a5fa; background: #0f1117; }
+
+  /* CONTENT PANELS */
+  .panel { display: none; padding: 12px 16px; max-height: 260px; overflow-y: auto; }
+  .panel.active { display: block; }
+  .panel::-webkit-scrollbar { width: 4px; }
+  .panel::-webkit-scrollbar-track { background: transparent; }
+  .panel::-webkit-scrollbar-thumb { background: #1e2a3a; border-radius: 4px; }
+
+  /* SITE ROWS */
+  .site-row {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px 6px; border-radius: 8px; margin-bottom: 4px;
+    transition: background 0.15s;
+  }
+  .site-row:hover { background: #1a1f2e; }
+  .site-favicon { width: 18px; height: 18px; border-radius: 4px; object-fit: contain; }
+  .site-favicon-fallback {
+    width: 18px; height: 18px; border-radius: 4px;
+    background: #1e2a3a; display: flex; align-items: center;
+    justify-content: center; font-size: 10px; color: #64748b; flex-shrink: 0;
+  }
+  .site-info { flex: 1; min-width: 0; }
+  .site-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .site-bar-wrap { height: 4px; background: #1e2a3a; border-radius: 2px; margin-top: 4px; }
+  .site-bar { height: 4px; border-radius: 2px; transition: width 0.6s ease; }
+  .site-time { font-size: 12px; color: #94a3b8; white-space: nowrap; flex-shrink: 0; }
+  .badge {
+    font-size: 9px; padding: 2px 6px; border-radius: 10px; font-weight: 600;
+    flex-shrink: 0; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-p { background: #14532d; color: #4ade80; }
+  .badge-u { background: #4c0519; color: #f87171; }
+  .badge-n { background: #1e2a3a; color: #94a3b8; }
+
+  /* WEEK CHART */
+  .week-chart { padding: 8px 4px; }
+  .week-bars { display: flex; align-items: flex-end; gap: 6px; height: 100px; margin-bottom: 8px; }
+  .week-bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .week-bar-stack { display: flex; flex-direction: column-reverse; align-items: center; width: 100%; height: 88px; justify-content: flex-start; }
+  .week-bar-seg { width: 100%; border-radius: 3px 3px 0 0; min-height: 2px; transition: height 0.6s ease; }
+  .week-day { font-size: 10px; color: #64748b; margin-top: 4px; }
+
+  /* FOCUS MODE */
+  .focus-section { padding: 4px 0; }
+  .focus-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 12px; background: #13171f; border-radius: 10px;
+    margin-bottom: 8px; border: 1px solid #1e2a3a;
+  }
+  .focus-label { font-size: 13px; font-weight: 600; }
+  .focus-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .toggle {
+    position: relative; width: 44px; height: 24px; cursor: pointer;
+  }
+  .toggle input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; inset: 0; background: #1e2a3a;
+    border-radius: 12px; transition: 0.3s;
+  }
+  .toggle-slider:before {
+    content: ''; position: absolute; width: 18px; height: 18px;
+    left: 3px; top: 3px; background: #64748b; border-radius: 50%; transition: 0.3s;
+  }
+  .toggle input:checked + .toggle-slider { background: #1d4ed8; }
+  .toggle input:checked + .toggle-slider:before { transform: translateX(20px); background: #fff; }
+
+  .insight-card {
+    background: linear-gradient(135deg, #1a1f2e, #16213e);
+    border: 1px solid #1e3a5f; border-radius: 10px; padding: 12px;
+    margin-bottom: 8px;
+  }
+  .insight-title { font-size: 11px; color: #60a5fa; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+  .insight-text { font-size: 12px; color: #cbd5e1; line-height: 1.5; }
+
+  /* FOOTER */
+  .footer {
+    padding: 10px 16px; border-top: 1px solid #1e2a3a;
+    display: flex; gap: 8px;
+  }
+  .btn {
+    flex: 1; padding: 8px; border-radius: 8px; border: none;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary { background: #1d4ed8; color: #fff; }
+  .btn-primary:hover { background: #2563eb; }
+  .btn-secondary { background: #1e2a3a; color: #94a3b8; }
+  .btn-secondary:hover { background: #253347; color: #e2e8f0; }
+
+  .empty { text-align: center; padding: 30px 0; color: #374151; font-size: 13px; }
+  .empty-icon { font-size: 32px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-top">
+    <div class="logo">
+      <span class="logo-icon">⚡</span>
+      <span class="logo-text">ProductivityPulse</span>
+    </div>
+    <button class="settings-btn" id="settingsBtn" title="Settings">⚙</button>
+  </div>
+</div>
+
+<!-- SCORE RING -->
+<div class="score-section">
+  <div class="ring-container">
+    <svg class="ring-svg" width="80" height="80" viewBox="0 0 80 80">
+      <circle class="ring-bg" cx="40" cy="40" r="32"/>
+      <circle class="ring-fill" id="ringFill" cx="40" cy="40" r="32"
+        stroke="#4ade80" stroke-dasharray="201" stroke-dashoffset="201"/>
+    </svg>
+    <div class="ring-score" id="ringScore">—</div>
+  </div>
+  <div class="score-info">
+    <div class="score-label">Today's Score</div>
+    <div class="score-title" id="scoreTitle">Loading…</div>
+    <div class="score-sub" id="scoreSub">Calculating your productivity…</div>
+  </div>
+</div>
+
+<!-- STATS ROW -->
+<div class="stats-row">
+  <div class="stat">
+    <div class="stat-val green" id="statProductive">—</div>
+    <div class="stat-lbl">✅ Productive</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val red" id="statUnproductive">—</div>
+    <div class="stat-lbl">🚫 Wasted</div>
+  </div>
+  <div class="stat">
+    <div class="stat-val blue" id="statTotal">—</div>
+    <div class="stat-lbl">⏱ Total</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <div class="tab active" data-tab="sites">Top Sites</div>
+  <div class="tab" data-tab="week">This Week</div>
+  <div class="tab" data-tab="insights">Insights</div>
+</div>
+
+<!-- PANEL: SITES -->
+<div class="panel active" id="panel-sites">
+  <div class="empty" id="sitesEmpty">
+    <div class="empty-icon">🌐</div>
+    Start browsing to track your time
+  </div>
+  <div id="sitesList"></div>
+</div>
+
+<!-- PANEL: WEEK -->
+<div class="panel" id="panel-week">
+  <div class="week-chart">
+    <div class="week-bars" id="weekBars"></div>
+    <div style="display:flex;gap:10px;justify-content:center;margin-top:8px;">
+      <span style="font-size:11px;color:#4ade80">■ Productive</span>
+      <span style="font-size:11px;color:#f87171">■ Unproductive</span>
+      <span style="font-size:11px;color:#64748b">■ Neutral</span>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL: INSIGHTS -->
+<div class="panel" id="panel-insights">
+  <div class="focus-section">
+    <div class="focus-row">
+      <div>
+        <div class="focus-label">🎯 Focus Mode</div>
+        <div class="focus-sub">Blocks unproductive sites</div>
+      </div>
+      <label class="toggle">
+        <input type="checkbox" id="focusToggle"/>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+  <div id="insightCards"></div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <button class="btn btn-secondary" id="clearBtn">Reset Today</button>
+  <button class="btn btn-primary" id="reportBtn">Full Report</button>
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>
