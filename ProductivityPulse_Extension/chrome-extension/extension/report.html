@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>ProductivityPulse — Full Report</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+
+  .page { max-width: 900px; margin: 0 auto; padding: 32px 24px; }
+  h1 { font-size: 28px; font-weight: 800; color: #60a5fa; margin-bottom: 4px; }
+  .subtitle { color: #64748b; font-size: 14px; margin-bottom: 32px; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px; }
+  .card { background: #13171f; border: 1px solid #1e2a3a; border-radius: 14px; padding: 20px; }
+  .card-title { font-size: 12px; color: #64748b; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; }
+  .big-num { font-size: 36px; font-weight: 800; }
+  .green { color: #4ade80; } .red { color: #f87171; } .blue { color: #60a5fa; } .yellow { color: #fbbf24; }
+
+  /* Donut chart */
+  .donut-wrap { display: flex; align-items: center; gap: 20px; }
+  .donut-legend { display: flex; flex-direction: column; gap: 8px; }
+  .legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* Sites table */
+  .sites-table { width: 100%; border-collapse: collapse; }
+  .sites-table th { text-align: left; padding: 10px 12px; font-size: 11px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid #1e2a3a; }
+  .sites-table td { padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #0f1117; }
+  .sites-table tr:hover td { background: #1a1f2e; }
+
+  .bar-cell { width: 140px; }
+  .mini-bar { height: 6px; border-radius: 3px; }
+
+  .badge { font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; }
+  .badge-p { background: #14532d; color: #4ade80; }
+  .badge-u { background: #4c0519; color: #f87171; }
+  .badge-n { background: #1e2a3a; color: #94a3b8; }
+
+  /* Week bars */
+  .week-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; align-items: end; height: 160px; }
+  .wbar-group { display: flex; flex-direction: column; align-items: center; gap: 4px; height: 100%; justify-content: flex-end; }
+  .wbar-stack { display: flex; flex-direction: column-reverse; width: 100%; border-radius: 4px 4px 0 0; overflow: hidden; }
+  .wbar-seg { width: 100%; min-height: 2px; }
+  .wbar-label { font-size: 11px; color: #64748b; margin-top: 4px; }
+  .wbar-val { font-size: 10px; color: #94a3b8; }
+
+  .section-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; color: #e2e8f0; }
+  section { margin-bottom: 28px; }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>⚡ ProductivityPulse</h1>
+  <div class="subtitle" id="reportDate">Full Report — Loading…</div>
+
+  <!-- SUMMARY CARDS -->
+  <div class="grid2" id="summaryCards">
+    <div class="card">
+      <div class="card-title">Today's Score</div>
+      <div class="big-num green" id="bigScore">—</div>
+      <div style="color:#64748b;font-size:13px;margin-top:4px" id="bigScoreLabel">—</div>
+    </div>
+    <div class="card">
+      <div class="card-title">Time Breakdown</div>
+      <div class="donut-wrap">
+        <svg width="90" height="90" viewBox="0 0 90 90">
+          <circle cx="45" cy="45" r="35" fill="none" stroke="#1e2a3a" stroke-width="12"/>
+          <circle id="donutProd" cx="45" cy="45" r="35" fill="none" stroke="#4ade80" stroke-width="12"
+            stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round"
+            transform="rotate(-90 45 45)" style="transition:stroke-dashoffset 0.8s"/>
+          <circle id="donutUnprod" cx="45" cy="45" r="35" fill="none" stroke="#f87171" stroke-width="12"
+            stroke-dasharray="220" stroke-dashoffset="220" stroke-linecap="round"
+            transform="rotate(-90 45 45)" style="transition:stroke-dashoffset 0.8s"/>
+        </svg>
+        <div class="donut-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div><span id="legProd">Productive: —</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#f87171"></div><span id="legUnprod">Wasted: —</span></div>
+          <div class="legend-item"><div class="legend-dot" style="background:#374151"></div><span id="legNeutral">Neutral: —</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WEEK CHART -->
+  <section>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:16px">This Week Overview</div>
+      <div class="week-grid" id="weekGrid"></div>
+      <div style="display:flex;gap:16px;margin-top:12px;">
+        <span style="font-size:11px;color:#4ade80">■ Productive</span>
+        <span style="font-size:11px;color:#f87171">■ Unproductive</span>
+        <span style="font-size:11px;color:#374151">■ Neutral</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- SITE TABLE -->
+  <section>
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">Top Sites Today</div>
+      <table class="sites-table">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Website</th>
+            <th>Time</th>
+            <th class="bar-cell">Usage</th>
+            <th>Category</th>
+          </tr>
+        </thead>
+        <tbody id="siteTableBody"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<script>
+function fmt(seconds) {
+  if (seconds < 60) return seconds + 's';
+  const h = Math.floor(seconds / 3600), m = Math.floor((seconds % 3600) / 60);
+  return h > 0 ? h + 'h ' + m + 'm' : m + 'm';
+}
+
+async function load() {
+  document.getElementById('reportDate').textContent =
+    'Full Report — ' + new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+  const todayResp = await chrome.runtime.sendMessage({ type: 'GET_TODAY' });
+  const usage = todayResp.usage || {};
+
+  let prod = 0, unprod = 0, neutral = 0;
+  Object.values(usage).forEach(v => {
+    if (v.category === 'productive') prod += v.seconds;
+    else if (v.category === 'unproductive') unprod += v.seconds;
+    else neutral += v.seconds;
+  });
+  const total = prod + unprod + neutral;
+  const score = total > 0 ? Math.round((prod / (prod + unprod + 1)) * 100) : 0;
+
+  document.getElementById('bigScore').textContent = score + '%';
+  document.getElementById('bigScoreLabel').textContent = score >= 70 ? '🚀 Excellent productivity!' : score >= 40 ? '💪 Decent — keep pushing' : '😐 Needs improvement';
+
+  // Donut
+  const circ = 220;
+  const prodOffset = circ - (circ * prod / Math.max(total, 1));
+  const unprodOffset = circ - (circ * unprod / Math.max(total, 1));
+  document.getElementById('donutProd').style.strokeDashoffset = prodOffset;
+  document.getElementById('donutUnprod').style.strokeDashoffset = unprodOffset;
+  document.getElementById('legProd').textContent = 'Productive: ' + fmt(prod);
+  document.getElementById('legUnprod').textContent = 'Wasted: ' + fmt(unprod);
+  document.getElementById('legNeutral').textContent = 'Neutral: ' + fmt(neutral);
+
+  // Site table
+  const tbody = document.getElementById('siteTableBody');
+  const entries = Object.entries(usage).sort((a, b) => b[1].seconds - a[1].seconds);
+  const maxSec = entries[0]?.[1]?.seconds || 1;
+  entries.forEach(([host, data], i) => {
+    const pct = Math.round((data.seconds / maxSec) * 100);
+    const color = data.category === 'productive' ? '#4ade80' : data.category === 'unproductive' ? '#f87171' : '#374151';
+    const badgeClass = data.category === 'productive' ? 'badge-p' : data.category === 'unproductive' ? 'badge-u' : 'badge-n';
+    const label = data.category === 'productive' ? 'Productive' : data.category === 'unproductive' ? 'Unproductive' : 'Neutral';
+    tbody.innerHTML += `<tr>
+      <td style="color:#64748b">${i + 1}</td>
+      <td>${host}</td>
+      <td style="color:#94a3b8">${fmt(data.seconds)}</td>
+      <td class="bar-cell"><div class="mini-bar" style="width:${pct}%;background:${color}"></div></td>
+      <td><span class="badge ${badgeClass}">${label}</span></td>
+    </tr>`;
+  });
+
+  // Week chart
+  const weekResp = await chrome.runtime.sendMessage({ type: 'GET_WEEK' });
+  const weekData = weekResp.data || {};
+  const dayNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const maxW = Math.max(...Object.values(weekData).map(v => v.productive + v.unproductive + v.neutral), 1);
+  const grid = document.getElementById('weekGrid');
+  Object.entries(weekData).forEach(([date, vals]) => {
+    const t = vals.productive + vals.unproductive + vals.neutral;
+    const pH = (vals.productive / maxW) * 130;
+    const uH = (vals.unproductive / maxW) * 130;
+    const nH = (vals.neutral / maxW) * 130;
+    const d = new Date(date + 'T00:00:00');
+    const isToday = date === new Date().toISOString().split('T')[0];
+    grid.innerHTML += `<div class="wbar-group">
+      <div class="wbar-val">${t > 0 ? fmt(t) : ''}</div>
+      <div class="wbar-stack" style="height:${pH + uH + nH}px">
+        <div class="wbar-seg" style="height:${pH}px;background:#4ade80"></div>
+        <div class="wbar-seg" style="height:${uH}px;background:#f87171"></div>
+        <div class="wbar-seg" style="height:${nH}px;background:#374151"></div>
+      </div>
+      <div class="wbar-label" style="color:${isToday ? '#60a5fa' : '#64748b'};font-weight:${isToday ? 700 : 400}">${dayNames[d.getDay()]}</div>
+    </div>`;
+  });
+}
+
+load();
+</script>
+</body>
+</html>
