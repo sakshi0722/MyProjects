@@ -1,0 +1,114 @@
+<div class="dashboard-wrapper">
+
+  <!-- Navbar -->
+  <nav class="dash-nav">
+    <div class="nav-left">
+      <span class="nav-logo">🏥</span>
+      <span class="nav-brand">MediConnect</span>
+    </div>
+    <div class="nav-right">
+      <button class="history-nav-btn" (click)="navigateTo('/history', false)">📋 History</button>
+      <div class="nav-user">
+        <div class="user-avatar">{{ getInitials() }}</div>
+        <span class="user-name">{{ user?.name }}</span>
+      </div>
+      <button class="logout-btn" (click)="logout()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="dash-content">
+
+    <!-- Greeting -->
+    <div class="greeting-row">
+      <div>
+        <h1 class="greeting">{{ greeting }}, {{ firstName }}! 👋</h1>
+        <p class="greeting-sub">Here's your health overview for today</p>
+      </div>
+      <div class="today-date">{{ today | date: 'EEEE, d MMMM' }}</div>
+    </div>
+
+    <!-- Daily Health Tip -->
+    <div class="tip-card" *ngIf="dailyTip">
+      <span class="tip-label">💡 Daily Health Tip</span>
+      <p class="tip-text">{{ dailyTip }}</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-grid" *ngIf="stats">
+      <div class="stat-card" (click)="navigateTo('/history', false)">
+        <div class="stat-icon" style="background:#fef2f2">🚨</div>
+        <div class="stat-val">{{ stats.emergency_searches }}</div>
+        <div class="stat-label">Emergency Searches</div>
+        <div class="stat-link">View History →</div>
+      </div>
+      <div class="stat-card" (click)="navigateTo('/history', false)">
+        <div class="stat-icon" style="background:#f0fdf4">🩹</div>
+        <div class="stat-val">{{ stats.injuries_analyzed }}</div>
+        <div class="stat-label">Injuries Analyzed</div>
+        <div class="stat-link">View History →</div>
+      </div>
+      <div class="stat-card" (click)="navigateTo('/history', false)">
+        <div class="stat-icon" style="background:#eff6ff">🏥</div>
+        <div class="stat-val">{{ stats.recovery_plans }}</div>
+        <div class="stat-label">Recovery Plans</div>
+        <div class="stat-link">View History →</div>
+      </div>
+      <div class="stat-card" (click)="navigateTo('/history', false)">
+        <div class="stat-icon" style="background:#faf5ff">💬</div>
+        <div class="stat-val">{{ stats.chats }}</div>
+        <div class="stat-label">MediBot Chats</div>
+        <div class="stat-link">View History →</div>
+      </div>
+    </div>
+
+    <div *ngIf="isLoading" class="loading-state">
+      <div class="loading-spinner"></div>
+      <p>Loading your dashboard...</p>
+    </div>
+
+    <!-- Module Cards -->
+    <h2 class="section-title">Quick Access</h2>
+    <div class="modules-grid">
+      <div *ngFor="let m of modules" class="module-card"
+        [style.border-color]="m.border" [style.background]="m.bg"
+        (click)="navigateTo(m.route, m.isChatbot)">
+        <div class="module-icon">{{ m.icon }}</div>
+        <div class="module-info">
+          <div class="module-title" [style.color]="m.color">{{ m.title }}</div>
+          <div class="module-desc">{{ m.desc }}</div>
+        </div>
+        <div class="module-arrow" [style.color]="m.color">→</div>
+      </div>
+    </div>
+
+    <!-- Recent Activity -->
+    <ng-container *ngIf="recentRecovery || recentInjury">
+      <h2 class="section-title">Recent Activity</h2>
+      <div class="activity-grid">
+        <div class="activity-card" *ngIf="recentRecovery" (click)="navigateTo('/history', false)">
+          <div class="ac-icon">🏥</div>
+          <div class="ac-info">
+            <div class="ac-title">Last Recovery Plan</div>
+            <div class="ac-detail">{{ recentRecovery.condition }}</div>
+            <div class="ac-date">{{ recentRecovery.date }}</div>
+          </div>
+          <div class="ac-arrow">→</div>
+        </div>
+        <div class="activity-card" *ngIf="recentInjury" (click)="navigateTo('/history', false)">
+          <div class="ac-icon">🩹</div>
+          <div class="ac-info">
+            <div class="ac-title">Last Injury Analysis</div>
+            <div class="ac-detail">{{ recentInjury.injury_type }}</div>
+            <div class="ac-date">{{ recentInjury.date }}</div>
+          </div>
+          <div class="ac-arrow">→</div>
+        </div>
+      </div>
+    </ng-container>
+
+    <div class="emergency-strip">
+      🚨 Medical Emergency? Call <a href="tel:108"><strong>108</strong></a> immediately
+    </div>
+
+  </div>
+</div>

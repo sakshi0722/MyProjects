@@ -1,0 +1,146 @@
+<div class="history-wrapper">
+
+  <!-- Header -->
+  <nav class="history-nav">
+    <button class="back-btn" (click)="goBack()">← Dashboard</button>
+    <div class="nav-title">📋 Activity History</div>
+    <div></div>
+  </nav>
+
+  <!-- Tabs -->
+  <div class="tabs-row">
+    <button class="htab" [class.active]="activeTab==='emergency'" (click)="loadTab('emergency')">
+      🚨 Emergency
+    </button>
+    <button class="htab" [class.active]="activeTab==='injury'" (click)="loadTab('injury')">
+      🩹 Injuries
+    </button>
+    <button class="htab" [class.active]="activeTab==='recovery'" (click)="loadTab('recovery')">
+      🏥 Recovery
+    </button>
+    <button class="htab" [class.active]="activeTab==='chat'" (click)="loadTab('chat')">
+      💬 Chats
+    </button>
+  </div>
+
+  <div class="history-content">
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="empty-state">
+      <div class="spinner"></div>
+      <p>Loading history...</p>
+    </div>
+
+    <!-- ── EMERGENCY LOGS ── -->
+    <div *ngIf="!isLoading && activeTab==='emergency'">
+      <div *ngIf="emergencyLogs.length === 0" class="empty-state">
+        <div class="empty-icon">🚨</div>
+        <p>No emergency searches yet.</p>
+        <small>Your hospital searches will appear here.</small>
+      </div>
+      <div *ngFor="let log of emergencyLogs" class="history-card">
+        <div class="card-header">
+          <div class="card-icon emergency-icon">🚨</div>
+          <div class="card-info">
+            <div class="card-title">{{ log.query || 'Emergency Search' }}</div>
+            <div class="card-date">{{ formatDate(log.timestamp) }}</div>
+          </div>
+        </div>
+        <div class="card-body" *ngIf="log.hospitals_found">
+          <span class="badge badge-blue">{{ log.hospitals_found }} hospitals found</span>
+        </div>
+        <div class="card-body" *ngIf="log.location">
+          <span class="detail-text">📍 {{ log.location }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── INJURY LOGS ── -->
+    <div *ngIf="!isLoading && activeTab==='injury'">
+      <div *ngIf="injuryLogs.length === 0" class="empty-state">
+        <div class="empty-icon">🩹</div>
+        <p>No injury analyses yet.</p>
+        <small>Your first aid analyses will appear here.</small>
+      </div>
+      <div *ngFor="let log of injuryLogs" class="history-card">
+        <div class="card-header">
+          <div class="card-icon injury-icon">🩹</div>
+          <div class="card-info">
+            <div class="card-title">{{ log.injury_type || 'Injury Analysis' }}</div>
+            <div class="card-date">{{ formatDate(log.timestamp || log.created_at) }}</div>
+          </div>
+          <span *ngIf="log.severity" class="badge" [class]="getSeverityClass(log.severity)">
+            {{ log.severity }}
+          </span>
+        </div>
+        <div class="card-body" *ngIf="log.description">
+          <span class="detail-text">📝 {{ log.description }}</span>
+        </div>
+        <div class="steps-preview" *ngIf="log.first_aid_steps?.length">
+          <div class="steps-label">First Aid Steps:</div>
+          <div *ngFor="let step of log.first_aid_steps?.slice(0,3)" class="step-item">
+            ✓ {{ step }}
+          </div>
+          <div *ngIf="log.first_aid_steps?.length > 3" class="more-steps">
+            +{{ log.first_aid_steps.length - 3 }} more steps
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── RECOVERY PLANS ── -->
+    <div *ngIf="!isLoading && activeTab==='recovery'">
+      <div *ngIf="recoveryPlans.length === 0" class="empty-state">
+        <div class="empty-icon">🏥</div>
+        <p>No recovery plans yet.</p>
+        <small>Your generated plans will appear here.</small>
+      </div>
+      <div *ngFor="let plan of recoveryPlans" class="history-card">
+        <div class="card-header">
+          <div class="card-icon recovery-icon">🏥</div>
+          <div class="card-info">
+            <div class="card-title">{{ plan.patient_info?.injury_type || plan.plan?.condition || 'Recovery Plan' }}</div>
+            <div class="card-date">{{ formatDate(plan.created_at) }}</div>
+          </div>
+          <span class="badge badge-blue">7-Day Plan</span>
+        </div>
+        <div class="card-body">
+          <div class="plan-meta">
+            <span class="meta-pill">👤 {{ plan.patient_info?.name }}</span>
+            <span class="meta-pill">🥗 {{ plan.patient_info?.food_preference | titlecase }}</span>
+            <span class="meta-pill">⚡ {{ plan.patient_info?.activity_level | titlecase }}</span>
+          </div>
+        </div>
+        <div class="card-body" *ngIf="plan.plan?.diet_plan?.length">
+          <div class="diet-preview">
+            <div class="diet-label">Day 1 Breakfast:</div>
+            <div *ngFor="let item of plan.plan?.diet_plan[0]?.breakfast?.slice(0,2)" class="diet-item">
+              🍽️ {{ item.name }} — {{ item.quantity }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CHAT LOGS ── -->
+    <div *ngIf="!isLoading && activeTab==='chat'">
+      <div *ngIf="chatLogs.length === 0" class="empty-state">
+        <div class="empty-icon">💬</div>
+        <p>No chat history yet.</p>
+        <small>Your MediBot conversations will appear here.</small>
+      </div>
+      <div *ngFor="let log of chatLogs" class="chat-card">
+        <div class="chat-date">{{ formatDate(log.timestamp) }}</div>
+        <div class="chat-bubble user-bubble">
+          <span class="bubble-label">You</span>
+          <p>{{ log.user_message }}</p>
+        </div>
+        <div class="chat-bubble bot-bubble">
+          <span class="bubble-label">🤖 MediBot</span>
+          <p>{{ log.bot_reply }}</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,257 @@
+<!-- emergency.component.html -->
+<div class="emergency-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="sos-header">
+    <div class="header-left">
+      <div class="logo-ring">🚨</div>
+      <div>
+        <h1 class="app-title">MediConnect</h1>
+        <p class="app-subtitle">Emergency Response</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <button class="contacts-btn" (click)="showContactsModal = true">👥 Contacts</button>
+      <div class="sos-badge">SOS</div>
+    </div>
+  </header>
+
+  <!-- ── Alerts ── -->
+  <div *ngIf="locationStatus" class="alert alert-info">📍 {{ locationStatus }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger" (click)="errorMessage=''">⚠️ {{ errorMessage }}</div>
+  <div *ngIf="successMessage" class="alert alert-success">✅ {{ successMessage }}</div>
+
+  <main class="main-content">
+
+    <!-- ══ LEFT PANEL ══ -->
+    <div class="left-panel">
+
+      <!-- Input Card -->
+      <div class="input-card">
+        <h2 class="input-title">Describe Your Emergency</h2>
+
+        <textarea
+          [(ngModel)]="inputText"
+          placeholder="e.g. 'Chest pain' or 'Road accident, someone is injured'"
+          class="emergency-textarea"
+          [class.listening]="isListening"
+          rows="2"
+        ></textarea>
+
+        <div class="input-actions">
+          <button class="voice-btn" [class.active]="isListening" (click)="toggleVoice()">
+            <span>🎤</span>
+            <span>{{ isListening ? 'Listening...' : 'Voice' }}</span>
+          </button>
+          <button class="sos-btn" (click)="handleEmergency()" [disabled]="isLoading">
+            <span *ngIf="!isLoading">🚨 Find Nearest Hospital</span>
+            <span *ngIf="isLoading" class="loader-text"><span class="spinner"></span> Searching...</span>
+          </button>
+        </div>
+
+        <!-- Quick Chips -->
+        <div class="quick-chips">
+          <button class="chip" (click)="inputText='Severe chest pain, possible heart attack'; handleEmergency()">❤️ Cardiac</button>
+          <button class="chip" (click)="inputText='Road accident, serious injuries'; handleEmergency()">🚑 Trauma</button>
+          <button class="chip" (click)="inputText='Child with high fever and convulsions'; handleEmergency()">👶 Pediatric</button>
+          <button class="chip" (click)="inputText='Cannot breathe, severe asthma attack'; handleEmergency()">🫁 Breathing</button>
+          <button class="chip" (click)="inputText='Stroke symptoms, face drooping'; handleEmergency()">🧠 Stroke</button>
+        </div>
+      </div>
+
+      <!-- ── RESULTS SECTION ── -->
+      <div *ngIf="isLoading" class="loading-card">
+        <div class="spinner-large"></div>
+        <p>Finding nearest hospitals...</p>
+      </div>
+
+      <div *ngIf="!isLoading && hospitals.length > 0" class="results-section">
+
+        <!-- Emergency Type -->
+        <div class="emergency-type-bar">
+          <span class="type-icon">{{ getEmergencyIcon() }}</span>
+          <span class="type-text">{{ emergencyType | titlecase }} Emergency</span>
+          <span class="hospital-count">{{ hospitals.length }} hospitals found</span>
+        </div>
+
+        <!-- ★ RECOMMENDED HOSPITAL — BIG CARD ★ -->
+        <div class="recommended-card" *ngIf="recommendedHospital">
+          <div class="rec-header">
+            <div class="rec-badge">⭐ NEAREST & BEST MATCH</div>
+            <div class="rec-eta-pill">🏃 {{ recommendedHospital.eta_minutes }} min away</div>
+          </div>
+
+          <h3 class="rec-name">{{ recommendedHospital.name }}</h3>
+          <p class="rec-address">📍 {{ recommendedHospital.address }}</p>
+
+          <div class="rec-stats">
+            <div class="stat">
+              <div class="stat-value red">{{ recommendedHospital.eta_minutes }}</div>
+              <div class="stat-label">Min Away</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <div class="stat-value">{{ recommendedHospital.distance_km }}</div>
+              <div class="stat-label">Km</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <div class="stat-value green">{{ recommendedHospital.available_beds }}</div>
+              <div class="stat-label">Beds</div>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat">
+              <div class="stat-value">⭐ {{ recommendedHospital.rating }}</div>
+              <div class="stat-label">Rating</div>
+            </div>
+          </div>
+
+          <div class="specialties">
+            <span *ngFor="let s of recommendedHospital.specialties" class="specialty-tag">{{ s }}</span>
+          </div>
+
+          <!-- CALL BUTTON — BIG AND PROMINENT -->
+          <a [href]="'tel:' + recommendedHospital.phone" class="call-btn-big">
+            📞 CALL NOW — {{ recommendedHospital.phone }}
+          </a>
+
+          <button class="show-map-btn" (click)="selectHospital(recommendedHospital)">
+            🗺️ Show on Map
+          </button>
+        </div>
+
+        <!-- ── ALL HOSPITALS LIST ── -->
+        <div class="hospitals-list-section">
+          <h3 class="list-title">All Nearby Hospitals</h3>
+
+          <div
+            *ngFor="let h of hospitals; let i = index"
+            class="hospital-card"
+            [class.selected]="selectedHospital?.id === h.id"
+          >
+            <!-- Rank + Name Row -->
+            <div class="hcard-top">
+              <div class="hcard-rank" [class.rank-1]="i===0" [class.rank-2]="i===1" [class.rank-3]="i===2">
+                {{ i + 1 }}
+              </div>
+              <div class="hcard-info">
+                <div class="hcard-name">{{ h.name }}</div>
+                <div class="hcard-address">📍 {{ h.address }}</div>
+              </div>
+              <span *ngIf="h.is_specialized" class="specialized-badge">✔ Specialized</span>
+            </div>
+
+            <!-- Stats Row -->
+            <div class="hcard-stats">
+              <div class="hcard-stat">
+                <span class="hstat-icon">🏃</span>
+                <span class="hstat-val">{{ h.eta_minutes }} min</span>
+              </div>
+              <div class="hcard-stat">
+                <span class="hstat-icon">📍</span>
+                <span class="hstat-val">{{ h.distance_km }} km</span>
+              </div>
+              <div class="hcard-stat">
+                <span class="hstat-icon">🛏</span>
+                <span class="hstat-val">{{ h.available_beds }} beds</span>
+              </div>
+              <div class="hcard-stat">
+                <span class="hstat-icon">⭐</span>
+                <span class="hstat-val">{{ h.rating }}</span>
+              </div>
+            </div>
+
+            <!-- Action Buttons Row -->
+            <div class="hcard-actions">
+              <a [href]="'tel:' + h.phone" class="hcard-call-btn">
+                📞 {{ h.phone }}
+              </a>
+              <button class="hcard-map-btn" (click)="selectHospital(h)">
+                🗺️ Map
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /results-section -->
+
+      <!-- ── Empty state before search ── -->
+      <div *ngIf="!isLoading && hospitals.length === 0" class="empty-state">
+        <div class="empty-icon">🏥</div>
+        <p>Type or speak your emergency above and tap <strong>Find Nearest Hospital</strong></p>
+        <p class="empty-sub">Or tap a quick chip to search instantly</p>
+      </div>
+
+      <!-- ── Quick Emergency Contacts (always visible) ── -->
+      <div class="contacts-strip">
+        <h3 class="contacts-title">📞 Quick Emergency Contacts</h3>
+        <div class="contacts-grid">
+          <div *ngFor="let c of contacts" class="contact-card" (click)="callContact(c.phone)">
+            <div class="contact-avatar">{{ c.name.charAt(0) }}</div>
+            <div class="contact-details">
+              <div class="contact-name">{{ c.name }}</div>
+              <div class="contact-phone">{{ c.phone }}</div>
+              <div class="contact-relation">{{ c.relation }}</div>
+            </div>
+            <div class="contact-call-icon">📞</div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left-panel -->
+
+    <!-- ══ MAP PANEL ══ -->
+    <div class="map-panel">
+      <div class="map-header" *ngIf="selectedHospital">
+        <div class="map-hospital-name">📍 {{ selectedHospital.name }}</div>
+        <div class="map-eta">🏃 {{ selectedHospital.eta_minutes }} min · {{ selectedHospital.distance_km }} km</div>
+      </div>
+      <div class="map-header" *ngIf="!selectedHospital">
+        <div class="map-hospital-name">🗺️ Pune Area Map</div>
+        <div class="map-eta">Search to see hospital markers</div>
+      </div>
+      <div #mapContainer class="map-container"></div>
+    </div>
+
+  </main>
+
+  <!-- ══ CONTACTS MODAL ══ -->
+  <div class="modal-overlay" *ngIf="showContactsModal" (click)="showContactsModal = false">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <h2>Emergency Contacts</h2>
+        <button class="modal-close" (click)="showContactsModal = false">✕</button>
+      </div>
+      <div class="modal-body">
+        <div *ngFor="let c of contacts; let i = index" class="modal-contact">
+          <div class="modal-avatar">{{ c.name.charAt(0) }}</div>
+          <div class="modal-info">
+            <div class="modal-name">{{ c.name }}</div>
+            <div class="modal-sub">{{ c.relation }} · {{ c.phone }}</div>
+          </div>
+          <div class="modal-actions">
+            <a [href]="'tel:' + c.phone" class="icon-btn call">📞</a>
+            <button class="icon-btn remove"
+              *ngIf="c.relation !== 'Emergency Services'"
+              (click)="removeContact(i)">🗑️</button>
+          </div>
+        </div>
+
+        <div *ngIf="showAddContact" class="add-form">
+          <input [(ngModel)]="newContact.name" placeholder="Contact Name" class="form-input"/>
+          <input [(ngModel)]="newContact.phone" placeholder="Phone Number" class="form-input" type="tel"/>
+          <input [(ngModel)]="newContact.relation" placeholder="Relation (e.g. Mother)" class="form-input"/>
+          <div class="form-actions">
+            <button class="btn-save" (click)="addContact()">Save</button>
+            <button class="btn-cancel" (click)="showAddContact = false">Cancel</button>
+          </div>
+        </div>
+
+        <button *ngIf="!showAddContact" class="add-contact-btn" (click)="showAddContact = true">
+          + Add Emergency Contact
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

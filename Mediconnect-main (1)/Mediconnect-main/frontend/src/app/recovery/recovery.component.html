@@ -1,0 +1,456 @@
+<!-- recovery.component.html -->
+<div class="recovery-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="recovery-header">
+    <div class="header-left">
+      <span class="header-icon">🏥</span>
+      <div>
+        <h1 class="header-title">Recovery Planner</h1>
+        <p class="header-sub">Personalized Indian diet & exercise plan for your recovery</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ══ FORM SECTION ══ -->
+  <div *ngIf="!result" class="form-section">
+
+    <!-- Step Progress Bar -->
+    <div class="step-progress">
+      <div class="step-item" [class.active]="currentStep >= 1" [class.done]="currentStep > 1">
+        <div class="step-circle">{{ currentStep > 1 ? '✓' : '1' }}</div>
+        <div class="step-label">Personal</div>
+      </div>
+      <div class="step-line" [class.done]="currentStep > 1"></div>
+      <div class="step-item" [class.active]="currentStep >= 2" [class.done]="currentStep > 2">
+        <div class="step-circle">{{ currentStep > 2 ? '✓' : '2' }}</div>
+        <div class="step-label">Injury</div>
+      </div>
+      <div class="step-line" [class.done]="currentStep > 2"></div>
+      <div class="step-item" [class.active]="currentStep >= 3" [class.done]="currentStep > 3">
+        <div class="step-circle">{{ currentStep > 3 ? '✓' : '3' }}</div>
+        <div class="step-label">Lifestyle</div>
+      </div>
+      <div class="step-line" [class.done]="currentStep > 3"></div>
+      <div class="step-item" [class.active]="currentStep >= 4">
+        <div class="step-circle">4</div>
+        <div class="step-label">Report</div>
+      </div>
+    </div>
+
+    <!-- Error -->
+    <div *ngIf="errorMessage" class="error-bar">⚠️ {{ errorMessage }}</div>
+
+    <!-- ════ STEP 1: Personal Info ════ -->
+    <div *ngIf="currentStep === 1" class="form-card">
+      <div class="form-card-header">
+        <span class="card-icon">👤</span>
+        <div>
+          <h2 class="form-title">Personal Information</h2>
+          <p class="form-subtitle">Basic details to personalise your plan</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group span-2">
+          <label>Full Name *</label>
+          <input [(ngModel)]="form.name" placeholder="Enter your full name" class="form-input"/>
+        </div>
+
+        <div class="form-group">
+          <label>Age *</label>
+          <input [(ngModel)]="form.age" type="number" placeholder="e.g. 35" class="form-input" min="1" max="120"/>
+        </div>
+
+        <div class="form-group">
+          <label>Gender *</label>
+          <div class="option-pills">
+            <button class="pill" [class.selected]="form.gender === 'male'" (click)="form.gender='male'">👨 Male</button>
+            <button class="pill" [class.selected]="form.gender === 'female'" (click)="form.gender='female'">👩 Female</button>
+            <button class="pill" [class.selected]="form.gender === 'other'" (click)="form.gender='other'">Other</button>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Weight (kg) *</label>
+          <div class="input-with-unit">
+            <input [(ngModel)]="form.weight_kg" type="number" placeholder="e.g. 65" class="form-input" min="1"/>
+            <span class="unit">kg</span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Height (cm) *</label>
+          <div class="input-with-unit">
+            <input [(ngModel)]="form.height_cm" type="number" placeholder="e.g. 165" class="form-input" min="1"/>
+            <span class="unit">cm</span>
+          </div>
+        </div>
+
+        <!-- BMI display -->
+        <div *ngIf="getBMI()" class="bmi-card span-2">
+          <div class="bmi-left">
+            <div class="bmi-label">Your BMI</div>
+            <div class="bmi-value">{{ getBMI() }}</div>
+          </div>
+          <div class="bmi-divider"></div>
+          <div class="bmi-right">
+            <div class="bmi-category" [class.bmi-normal]="getBMILabel()==='Normal'"
+                 [class.bmi-warn]="getBMILabel()==='Overweight' || getBMILabel()==='Underweight'"
+                 [class.bmi-danger]="getBMILabel()==='Obese'">
+              {{ getBMILabel() }}
+            </div>
+            <div class="bmi-note">Based on your weight and height</div>
+          </div>
+        </div>
+      </div>
+
+      <button class="next-btn" (click)="nextStep()">Next: Injury Details →</button>
+    </div>
+
+    <!-- ════ STEP 2: Injury / Condition ════ -->
+    <div *ngIf="currentStep === 2" class="form-card">
+      <div class="form-card-header">
+        <span class="card-icon">🩺</span>
+        <div>
+          <h2 class="form-title">Injury / Condition</h2>
+          <p class="form-subtitle">Tell us what you are recovering from</p>
+        </div>
+      </div>
+
+      <!-- Injury Quick Select -->
+      <div class="form-group">
+        <label>Select Your Injury or Condition *</label>
+        <div class="injury-grid">
+          <button
+            *ngFor="let inj of injuryOptions"
+            class="injury-chip"
+            [class.selected]="form.injury_type === inj"
+            (click)="selectInjury(inj)"
+          >{{ inj }}</button>
+        </div>
+      </div>
+
+      <!-- Custom injury if 'Other' selected or manual entry -->
+      <div class="form-group" style="margin-top: 12px;">
+        <label>Or describe your condition in detail *</label>
+        <textarea
+          [(ngModel)]="form.injury_type"
+          placeholder="e.g. 'Post knee ligament surgery', 'Recovering from dengue fever', 'Diabetic foot wound'"
+          class="form-input form-textarea"
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- Injury Date -->
+      <div class="form-group" style="margin-top: 12px;">
+        <label>When did the injury / surgery happen?</label>
+        <input [(ngModel)]="form.injury_date" type="date" class="form-input" style="max-width: 240px;"/>
+      </div>
+
+      <!-- Recovery Goal -->
+      <div class="form-group" style="margin-top: 12px;">
+        <label>Recovery Goal (optional)</label>
+        <input
+          [(ngModel)]="form.recovery_goal"
+          placeholder="e.g. 'Walk without pain in 4 weeks', 'Regain full strength'"
+          class="form-input"
+        />
+      </div>
+
+      <div class="form-btn-row">
+        <button class="back-btn" (click)="prevStep()">← Back</button>
+        <button class="next-btn" (click)="nextStep()">Next: Lifestyle →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 3: Lifestyle & Health ════ -->
+    <div *ngIf="currentStep === 3" class="form-card">
+      <div class="form-card-header">
+        <span class="card-icon">🥗</span>
+        <div>
+          <h2 class="form-title">Lifestyle & Health Details</h2>
+          <p class="form-subtitle">Helps us create the right diet and exercise plan</p>
+        </div>
+      </div>
+
+      <div class="form-grid">
+
+        <!-- Food Preference -->
+        <div class="form-group span-2">
+          <label>Food Preference *</label>
+          <div class="option-pills">
+            <button class="pill" [class.selected]="form.food_preference === 'veg'" (click)="form.food_preference='veg'">🥦 Vegetarian</button>
+            <button class="pill" [class.selected]="form.food_preference === 'eggetarian'" (click)="form.food_preference='eggetarian'">🥚 Eggetarian</button>
+            <button class="pill" [class.selected]="form.food_preference === 'non-veg'" (click)="form.food_preference='non-veg'">🍗 Non-Vegetarian</button>
+          </div>
+        </div>
+
+        <!-- Activity Level -->
+        <div class="form-group span-2">
+          <label>Current Activity Level *</label>
+          <div class="activity-grid">
+            <button class="activity-card" [class.selected]="form.activity_level === 'sedentary'" (click)="form.activity_level='sedentary'">
+              <span class="act-icon">🛋️</span>
+              <span class="act-label">Bed Rest</span>
+              <span class="act-desc">Mostly resting, minimal movement</span>
+            </button>
+            <button class="activity-card" [class.selected]="form.activity_level === 'light'" (click)="form.activity_level='light'">
+              <span class="act-icon">🚶</span>
+              <span class="act-label">Light</span>
+              <span class="act-desc">Short slow walks only</span>
+            </button>
+            <button class="activity-card" [class.selected]="form.activity_level === 'moderate'" (click)="form.activity_level='moderate'">
+              <span class="act-icon">🏃</span>
+              <span class="act-label">Moderate</span>
+              <span class="act-desc">Some daily activity</span>
+            </button>
+            <button class="activity-card" [class.selected]="form.activity_level === 'active'" (click)="form.activity_level='active'">
+              <span class="act-icon">💪</span>
+              <span class="act-label">Active</span>
+              <span class="act-desc">Regular exercise possible</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Health Conditions -->
+        <div class="form-group span-2">
+          <label>Existing Health Conditions (select all that apply)</label>
+          <div class="condition-chips">
+            <button
+              *ngFor="let c of healthConditionOptions"
+              class="condition-chip"
+              [class.selected]="isConditionSelected(c)"
+              (click)="toggleCondition(c)"
+            >{{ c }}</button>
+          </div>
+        </div>
+
+        <!-- Allergies -->
+        <div class="form-group">
+          <label>Food Allergies</label>
+          <input [(ngModel)]="form.allergies" placeholder="e.g. peanuts, milk" class="form-input"/>
+        </div>
+
+        <!-- Medications -->
+        <div class="form-group">
+          <label>Current Medications</label>
+          <input [(ngModel)]="form.current_medications" placeholder="e.g. Metformin, Aspirin" class="form-input"/>
+        </div>
+
+      </div>
+
+      <div class="form-btn-row">
+        <button class="back-btn" (click)="prevStep()">← Back</button>
+        <button class="next-btn" (click)="nextStep()">Next: Upload Report →</button>
+      </div>
+    </div>
+
+    <!-- ════ STEP 4: Upload Report ════ -->
+    <div *ngIf="currentStep === 4" class="form-card">
+      <div class="form-card-header">
+        <span class="card-icon">📋</span>
+        <div>
+          <h2 class="form-title">Doctor's Report</h2>
+          <p class="form-subtitle">Optional — our AI will read it and make your plan more accurate</p>
+        </div>
+      </div>
+
+      <!-- Summary of entered info -->
+      <div class="summary-strip">
+        <div class="ss-item"><span class="ss-label">Name</span><span class="ss-val">{{ form.name }}</span></div>
+        <div class="ss-item"><span class="ss-label">Age / Gender</span><span class="ss-val">{{ form.age }}y · {{ form.gender }}</span></div>
+        <div class="ss-item"><span class="ss-label">Weight / Height</span><span class="ss-val">{{ form.weight_kg }}kg · {{ form.height_cm }}cm</span></div>
+        <div class="ss-item"><span class="ss-label">Injury</span><span class="ss-val">{{ form.injury_type }}</span></div>
+        <div class="ss-item"><span class="ss-label">Diet</span><span class="ss-val">{{ form.food_preference | titlecase }}</span></div>
+        <div class="ss-item"><span class="ss-label">Activity</span><span class="ss-val">{{ form.activity_level | titlecase }}</span></div>
+      </div>
+
+      <!-- Drop Zone -->
+      <div
+        class="report-dropzone"
+        [class.dragging]="isDragging"
+        [class.has-file]="reportFile"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="!reportFile && reportInput.click()"
+      >
+        <div *ngIf="!reportFile" class="drop-empty">
+          <div class="drop-icon">📄</div>
+          <p class="drop-main">Drag & drop or click to upload report</p>
+          <p class="drop-hint">JPEG, PNG, PDF · Max 10MB</p>
+          <button class="select-file-btn" (click)="$event.stopPropagation(); reportInput.click()">
+            Choose File
+          </button>
+        </div>
+
+        <div *ngIf="reportFile && reportPreview !== 'pdf'" class="report-preview">
+          <img [src]="reportPreview" class="report-img" alt="Report preview"/>
+          <button class="clear-file-btn" (click)="$event.stopPropagation(); clearReport()">✕ Remove</button>
+        </div>
+
+        <div *ngIf="reportFile && reportPreview === 'pdf'" class="pdf-preview">
+          <div class="pdf-icon">📄</div>
+          <div class="pdf-name">{{ reportFile.name }}</div>
+          <div class="pdf-size">{{ (reportFile.size / 1024).toFixed(0) }} KB</div>
+          <button class="clear-file-btn" (click)="$event.stopPropagation(); clearReport()">✕ Remove</button>
+        </div>
+      </div>
+
+      <input #reportInput type="file" accept="image/*,.pdf" style="display:none" (change)="onReportSelected($event)"/>
+
+      <!-- Generate Button -->
+      <button class="generate-btn" (click)="generatePlan()" [disabled]="isGenerating">
+        <span *ngIf="!isGenerating">🌟 Generate My 7-Day Recovery Plan</span>
+        <span *ngIf="isGenerating" class="generating-text">
+          <span class="spinner"></span>
+          {{ uploadProgress < 100 ? 'Uploading... ' + uploadProgress + '%' : 'AI is building your plan...' }}
+        </span>
+      </button>
+
+      <div *ngIf="isGenerating" class="progress-wrap">
+        <div class="progress-fill" [style.width.%]="uploadProgress < 100 ? uploadProgress : 100"></div>
+      </div>
+
+      <div class="form-btn-row" style="margin-top: 10px;">
+        <button class="back-btn" (click)="prevStep()">← Back</button>
+        <button class="skip-btn" (click)="generatePlan()" [disabled]="isGenerating">
+          Skip & Generate Without Report →
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /form-section -->
+
+
+  <!-- ══ RESULT SECTION ══ -->
+  <div *ngIf="result" class="result-section">
+
+    <!-- Patient Summary Card -->
+    <div class="patient-card">
+      <div class="patient-left">
+        <div class="patient-avatar">{{ result.patient_info.name?.charAt(0) }}</div>
+        <div>
+          <div class="patient-name">{{ result.patient_info.name }}</div>
+          <div class="patient-meta">
+            {{ result.patient_info.age }}y · {{ result.patient_info.gender | titlecase }} ·
+            {{ result.patient_info.weight_kg }}kg / {{ result.patient_info.height_cm }}cm ·
+            {{ result.patient_info.food_preference | titlecase }}
+          </div>
+          <div class="condition-tag">🩺 {{ result.condition }}</div>
+        </div>
+      </div>
+      <button class="new-plan-btn" (click)="startOver()">+ New Plan</button>
+    </div>
+
+    <!-- Report Summary -->
+    <div *ngIf="result.report_summary" class="report-summary-card">
+      <h4>📋 Report Analysis</h4>
+      <p>{{ result.report_summary }}</p>
+    </div>
+
+    <!-- Result Tabs -->
+    <div class="result-tabs">
+      <button class="rtab" [class.active]="activeResultTab==='diet'" (click)="activeResultTab='diet'">🍽️ Diet Plan</button>
+      <button class="rtab" [class.active]="activeResultTab==='exercise'" (click)="activeResultTab='exercise'">🏃 Exercise</button>
+      <button class="rtab" [class.active]="activeResultTab==='tips'" (click)="activeResultTab='tips'">💡 Tips & Foods</button>
+    </div>
+
+    <!-- ── DIET PLAN ── -->
+    <div *ngIf="activeResultTab==='diet'" class="tab-body">
+      <div class="day-selector">
+        <button *ngFor="let day of result.diet_plan; let i=index"
+          class="day-btn" [class.active]="activeDietDay===i" (click)="activeDietDay=i">
+          {{ getDayShort(day.day) }}
+        </button>
+      </div>
+
+      <div *ngIf="result.diet_plan[activeDietDay] as day" class="day-plan">
+        <div class="day-header">
+          <h3>{{ day.day }}</h3>
+          <div class="day-calories">~{{ getTotalCalories(day) }} kcal · 💧 {{ day.water_intake }}</div>
+        </div>
+
+        <div class="meal-section" *ngFor="let meal of [
+          {title: '☀️ Breakfast', items: day.breakfast},
+          {title: '🍎 Mid Morning', items: day.mid_morning},
+          {title: '🍛 Lunch', items: day.lunch},
+          {title: '☕ Evening Snack', items: day.evening_snack},
+          {title: '🌙 Dinner', items: day.dinner}
+        ]">
+          <div class="meal-title">{{ meal.title }} <span class="meal-cal-total">{{ getMealCalories(meal.items) }} kcal</span></div>
+          <div class="meal-items">
+            <div *ngFor="let item of meal.items" class="meal-item">
+              <div class="meal-name">{{ item.name }}</div>
+              <div class="meal-meta">
+                <span class="meal-qty">{{ item.quantity }}</span>
+                <span *ngIf="item.calories" class="meal-cal">{{ item.calories }} kcal</span>
+              </div>
+              <div *ngIf="item.notes" class="meal-note">💚 {{ item.notes }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── EXERCISE ── -->
+    <div *ngIf="activeResultTab==='exercise'" class="tab-body">
+      <div class="exercise-grid">
+        <div class="exercise-section">
+          <h3 class="ex-section-title">✅ Recommended Exercises</h3>
+          <ng-container *ngFor="let ex of result.exercise_plan">
+            <div *ngIf="!ex.is_avoid" class="exercise-card">
+              <div class="ex-name">{{ ex.name }}</div>
+              <div class="ex-meta">
+                <span class="ex-duration">⏱️ {{ ex.duration }}</span>
+                <span *ngIf="ex.sets_reps" class="ex-sets">🔁 {{ ex.sets_reps }}</span>
+              </div>
+              <div *ngIf="ex.notes" class="ex-notes">{{ ex.notes }}</div>
+            </div>
+          </ng-container>
+        </div>
+        <div class="exercise-section avoid-section">
+          <h3 class="ex-section-title avoid-title">❌ Exercises to AVOID</h3>
+          <ng-container *ngFor="let ex of result.exercise_plan">
+            <div *ngIf="ex.is_avoid" class="exercise-card avoid-card">
+              <div class="ex-name">{{ ex.name }}</div>
+              <div *ngIf="ex.notes" class="ex-notes">{{ ex.notes }}</div>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── TIPS & FOODS ── -->
+    <div *ngIf="activeResultTab==='tips'" class="tab-body">
+      <div class="tips-grid">
+        <div class="tips-card include-card">
+          <h3 class="tips-title">✅ Foods to Include</h3>
+          <ul class="tips-list include-list">
+            <li *ngFor="let f of result.foods_to_include">{{ f }}</li>
+          </ul>
+        </div>
+        <div class="tips-card avoid-foods-card">
+          <h3 class="tips-title">❌ Foods to Avoid</h3>
+          <ul class="tips-list avoid-list">
+            <li *ngFor="let f of result.foods_to_avoid">{{ f }}</li>
+          </ul>
+        </div>
+        <div class="tips-card general-card">
+          <h3 class="tips-title">💡 General Recovery Tips</h3>
+          <ul class="tips-list general-list">
+            <li *ngFor="let t of result.general_tips">{{ t }}</li>
+          </ul>
+        </div>
+        <div class="tips-card followup-card">
+          <h3 class="tips-title">📅 Follow-Up</h3>
+          <p class="followup-text">{{ result.follow_up }}</p>
+          <a href="tel:108" class="emergency-link">📞 Emergency: 108</a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /result-section -->
+
+</div>

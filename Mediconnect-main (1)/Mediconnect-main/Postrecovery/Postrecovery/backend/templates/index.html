@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Post-Recovery Care</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+    <h1>Post-Recovery Care System</h1>
+    
+
+    <form method="POST" action="/post_recovery">
+
+        <h3>Basic Information</h3>
+        <input name="name" placeholder="Full Name" required>
+        <input type="number" name="age" placeholder="Age" min="1" required>
+        <input type="number" name="weight" placeholder="Weight (kg)" required>
+        <input type="number" name="height" placeholder="Height (cm)" required>
+
+        <select name="gender" required>
+            <option value="" disabled selected>Gender</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+            <option value="other">Other</option>
+        </select>
+
+        <h3>Medical History</h3>
+        <select name="injury" required>
+            <option value="" disabled selected>Select Minor Injury</option>
+            <option value="knee_strain">Knee Strain</option>
+            <option value="back_strain">Back Muscle Strain</option>
+            <option value="ankle_sprain">Ankle Sprain</option>
+            <option value="wrist_sprain">Wrist Sprain</option>
+            <option value="hairline_fracture">Hairline Fracture</option>
+            <option value="shoulder_pain">Shoulder Soft Tissue Injury</option>
+            <option value="neck_strain">Neck Strain</option>
+            <option value="minor_burn">Minor Burn (1st Degree)</option>
+            <option value="elbow_injury">Elbow Injury (Tennis Elbow)</option>
+            <option value="muscle_pull">Muscle Pull</option>
+        </select>
+
+        <select name="severity" required>
+            <option value="" disabled selected>Severity of injury</option>
+            <option value="mild">Mild</option>
+            <option value="moderate">Moderate</option>
+            <option value="severe">Severe</option>
+        </select>
+
+        <h3>Lifestyle</h3>
+        <select name="activity" required >
+            <option value="" disabled selected>Daily Activity</option>
+            <option value="no exercise">Mostly Sitting (No Exercise)</option>
+            <option value="moderate">Some Walking / Light Work</option>
+            <option value="high">Daily Physical Work</option>
+        </select>
+
+        <input type="number" name="sleep" placeholder="Sleep Hours per Day">
+    
+
+        <h3>Diet Preference</h3>
+        <select name="diet_pref" required>
+            <option value="" disabled selected>select-</option>
+            <option>Vegetarian</option>
+            <option>Non-Vegetarian</option>
+            <option>Vegan</option>
+            <option>Eggeterian</option>
+        </select>
+
+        <button type="submit">Generate AI Recovery Plan</button>
+    </form>
+
+    {% if result %}
+    <div class="result">
+        <h2>Hello {{ name }}</h2>
+        <p><strong>Daily Calories:</strong> {{ calories }} kcal</p>
+        <p><strong>Diet Plan:</strong> {{ diet }}</p>
+        <p><strong>Exercise Plan:</strong> {{ exercise }}</p>
+        <p><strong>Estimated Recovery Time:</strong> {{ recovery }} days</p>
+
+        <div class="progress-bar">
+            <div class="progress" style="width: {{ progress }}%">
+                {{ progress }}%
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

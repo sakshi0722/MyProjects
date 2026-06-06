@@ -1,0 +1,101 @@
+<!-- chatbot.component.html — Floating popup chatbot -->
+
+<!-- ── Floating Button ── -->
+<div class="chat-fab" (click)="toggleChat()" [class.open]="isOpen" title="MediBot">
+  <span class="fab-icon">{{ isOpen ? '✕' : '💬' }}</span>
+  <span class="fab-label" *ngIf="!isOpen">MediBot</span>
+  <span class="unread-dot" *ngIf="!isOpen"></span>
+</div>
+
+<!-- ── Chat Popup ── -->
+<div class="chat-popup" [class.visible]="isOpen">
+
+  <!-- Header -->
+  <div class="chat-header">
+    <div class="chat-header-left">
+      <div class="bot-avatar">🤖</div>
+      <div>
+        <div class="bot-name">MediBot</div>
+        <div class="bot-status">
+          <span class="status-dot"></span>
+          {{ isTyping ? 'Typing...' : 'Online' }}
+        </div>
+      </div>
+    </div>
+    <div class="chat-header-right">
+      <button class="header-btn" (click)="clearChat()" title="Clear chat">🗑️</button>
+      <button class="header-btn close-btn" (click)="closeChat()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div class="chat-messages">
+
+    <div
+      *ngFor="let msg of messages"
+      class="message-row"
+      [class.user-row]="msg.role === 'user'"
+      [class.bot-row]="msg.role === 'assistant'"
+      [class.new-msg]="msg.isNew"
+    >
+      <!-- Bot avatar (only for assistant) -->
+      <div *ngIf="msg.role === 'assistant'" class="msg-avatar">🤖</div>
+
+      <div class="message-bubble" [class.user-bubble]="msg.role === 'user'" [class.bot-bubble]="msg.role === 'assistant'">
+        <div class="msg-content" [innerHTML]="formatMessage(msg.content)"></div>
+        <div class="msg-time">{{ getTime(msg.timestamp) }}</div>
+      </div>
+    </div>
+
+    <!-- Typing indicator -->
+    <div *ngIf="isTyping" class="message-row bot-row">
+      <div class="msg-avatar">🤖</div>
+      <div class="message-bubble bot-bubble typing-bubble">
+        <span class="dot"></span>
+        <span class="dot"></span>
+        <span class="dot"></span>
+      </div>
+    </div>
+
+    <div #messagesEnd></div>
+  </div>
+
+  <!-- Quick Questions (shown only at start) -->
+  <div class="quick-questions" *ngIf="messages.length <= 2">
+    <div class="quick-label">Quick questions:</div>
+    <div class="quick-chips">
+      <button
+        *ngFor="let q of quickQuestions"
+        class="quick-chip"
+        (click)="sendMessage(q)"
+      >{{ q }}</button>
+    </div>
+  </div>
+
+  <!-- Input Area -->
+  <div class="chat-input-area">
+    <textarea
+      #inputRef
+      [(ngModel)]="inputText"
+      (keydown)="onKeyDown($event)"
+      placeholder="Ask about symptoms, first aid, diet..."
+      class="chat-input"
+      rows="1"
+    ></textarea>
+    <button
+      class="send-btn"
+      (click)="sendMessage()"
+      [disabled]="!inputText.trim() || isTyping"
+    >
+      <span *ngIf="!isTyping">➤</span>
+      <span *ngIf="isTyping" class="sending-spin">⟳</span>
+    </button>
+  </div>
+
+  <!-- Emergency Footer -->
+  <div class="emergency-strip">
+    🚨 Emergency? Call <a href="tel:108"><strong>108</strong></a> immediately
+  </div>
+
+</div>
+

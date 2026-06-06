@@ -1,0 +1,281 @@
+<!-- minor-injury.component.html -->
+<div class="minor-wrapper">
+
+  <!-- ── Header ── -->
+  <header class="minor-header">
+    <div class="header-left">
+      <div class="header-icon">🩹</div>
+      <div>
+        <h1 class="header-title">Minor Injury Assistant</h1>
+        <p class="header-sub">Upload a photo → Get instant first aid guidance</p>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Alert ── -->
+  <div class="disclaimer-bar">
+    ⚠️ This tool provides general first aid guidance only. For serious injuries, call <strong>108</strong> immediately.
+  </div>
+
+  <div class="page-layout">
+
+    <!-- ══ LEFT: Upload Panel ══ -->
+    <div class="upload-panel">
+
+      <!-- Drop Zone -->
+      <div
+        class="drop-zone"
+        [class.dragging]="isDragging"
+        [class.has-image]="previewUrl"
+        (dragover)="onDragOver($event)"
+        (dragleave)="onDragLeave($event)"
+        (drop)="onDrop($event)"
+        (click)="!previewUrl && fileInput.click()"
+      >
+        <!-- Empty state -->
+        <div *ngIf="!previewUrl" class="drop-empty">
+          <div class="drop-icon">📸</div>
+          <h3>Upload Injury Photo</h3>
+          <p>Drag & drop or click to select</p>
+          <p class="drop-hint">JPEG, PNG, WebP · Max 5MB</p>
+          <button class="select-btn" (click)="$event.stopPropagation(); fileInput.click()">
+            Choose Photo
+          </button>
+        </div>
+
+        <!-- Preview -->
+        <div *ngIf="previewUrl" class="preview-container">
+          <img [src]="previewUrl" alt="Injury preview" class="preview-image"/>
+          <button class="clear-btn" (click)="$event.stopPropagation(); clearImage()">✕ Remove</button>
+        </div>
+      </div>
+
+      <input
+        #fileInput
+        type="file"
+        accept="image/jpeg,image/jpg,image/png,image/webp"
+        style="display:none"
+        (change)="onFileSelected($event)"
+      />
+
+      <!-- Description -->
+      <div class="description-box">
+        <label class="desc-label">Describe the injury (optional but helps AI)</label>
+        <textarea
+          [(ngModel)]="description"
+          placeholder="e.g. 'Cut on finger while cooking', 'Bruise on knee after a fall', 'Burn from hot water'"
+          class="desc-textarea"
+          rows="3"
+        ></textarea>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="error-msg">
+        ⚠️ {{ errorMessage }}
+      </div>
+
+      <!-- Analyze Button -->
+      <button
+        class="analyze-btn"
+        (click)="analyzeInjury()"
+        [disabled]="!selectedFile || isAnalyzing"
+      >
+        <span *ngIf="!isAnalyzing">🔍 Analyze Injury & Get First Aid</span>
+        <span *ngIf="isAnalyzing" class="analyzing-text">
+          <span class="spinner"></span>
+          Analyzing... {{ uploadProgress < 100 ? 'Uploading ' + uploadProgress + '%' : 'AI processing...' }}
+        </span>
+      </button>
+
+      <!-- Progress Bar -->
+      <div *ngIf="isAnalyzing" class="progress-bar-wrap">
+        <div class="progress-bar" [style.width.%]="uploadProgress < 100 ? uploadProgress : 100"></div>
+      </div>
+
+      <!-- Quick Injury Types -->
+      <div class="quick-section">
+        <p class="quick-label">Don't have a photo? Try a guide:</p>
+        <div class="quick-grid">
+          <button class="quick-card" (click)="description='cut on finger'; analyzeInjury()">
+            <span class="qc-icon">🩸</span>
+            <span>Cut</span>
+          </button>
+          <button class="quick-card" (click)="description='burn from heat'; analyzeInjury()">
+            <span class="qc-icon">🔥</span>
+            <span>Burn</span>
+          </button>
+          <button class="quick-card" (click)="description='bruise after fall'; analyzeInjury()">
+            <span class="qc-icon">💜</span>
+            <span>Bruise</span>
+          </button>
+          <button class="quick-card" (click)="description='sprained ankle'; analyzeInjury()">
+            <span class="qc-icon">🦶</span>
+            <span>Sprain</span>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /upload-panel -->
+
+    <!-- ══ RIGHT: Results Panel ══ -->
+    <div class="results-panel">
+
+      <!-- Placeholder when no result -->
+      <div *ngIf="!result && !isAnalyzing" class="results-empty">
+        <div class="empty-illustration">🏥</div>
+        <h3>First Aid Guide Will Appear Here</h3>
+        <p>Upload a photo of your injury and click Analyze to get:</p>
+        <ul class="feature-list">
+          <li>✅ Injury type identification</li>
+          <li>✅ Severity assessment</li>
+          <li>✅ Step-by-step first aid instructions</li>
+          <li>✅ What to do & what NOT to do</li>
+          <li>✅ Warning signs to watch for</li>
+          <li>✅ When to see a doctor</li>
+        </ul>
+      </div>
+
+      <!-- Loading state -->
+      <div *ngIf="isAnalyzing" class="results-loading">
+        <div class="loading-spinner"></div>
+        <h3>Analyzing your injury...</h3>
+        <p>Our AI is examining the image and preparing personalized first aid guidance</p>
+        <div class="loading-steps">
+          <div class="lstep active">📤 Uploading image</div>
+          <div class="lstep" [class.active]="uploadProgress === 100">🔍 Identifying injury</div>
+          <div class="lstep" [class.active]="uploadProgress === 100">📋 Generating first aid guide</div>
+        </div>
+      </div>
+
+      <!-- ── RESULTS ── -->
+      <div *ngIf="result && !isAnalyzing" class="results-section">
+
+        <!-- Injury Summary Card -->
+        <div class="summary-card" [class.severity-mild]="result.severity === 'mild'"
+             [class.severity-moderate]="result.severity === 'moderate'"
+             [class.severity-severe]="result.severity === 'severe'">
+
+          <div class="summary-top">
+            <div class="summary-left">
+              <div class="injury-name">{{ result.injury_type }}</div>
+              <div class="injury-confidence">
+                AI Confidence: {{ getConfidencePercent() }}%
+                <span *ngIf="result.source === 'fallback'" class="fallback-badge">Keyword Match</span>
+              </div>
+            </div>
+            <div class="severity-badge" [class]="'sev-' + result.severity">
+              {{ getSeverityIcon() }} {{ result.severity | titlecase }}
+            </div>
+          </div>
+
+          <div class="summary-stats">
+            <div class="sstat">
+              <span class="sstat-icon">⏱️</span>
+              <div>
+                <div class="sstat-val">{{ result.estimated_healing }}</div>
+                <div class="sstat-label">Healing Time</div>
+              </div>
+            </div>
+            <div class="sstat-divider"></div>
+            <div class="sstat">
+              <span class="sstat-icon">{{ result.seek_doctor ? '🏥' : '🏠' }}</span>
+              <div>
+                <div class="sstat-val">{{ result.seek_doctor ? 'See Doctor' : 'Home Care' }}</div>
+                <div class="sstat-label">Treatment</div>
+              </div>
+            </div>
+            <div class="sstat-divider"></div>
+            <div class="sstat">
+              <span class="sstat-icon">📋</span>
+              <div>
+                <div class="sstat-val">{{ result.first_aid_steps.length }} Steps</div>
+                <div class="sstat-label">First Aid</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Seek Doctor Alert -->
+          <div *ngIf="result.seek_doctor" class="doctor-alert">
+            🚨 <strong>Medical Attention Recommended:</strong> {{ result.seek_doctor_reason }}
+            <a href="tel:108" class="call-108">📞 Call 108</a>
+          </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="tab-nav">
+          <button class="tab-btn" [class.active]="activeTab === 'steps'" (click)="activeTab = 'steps'">
+            📋 First Aid Steps
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'dos'" (click)="activeTab = 'dos'">
+            ✅ Do's & Don'ts
+          </button>
+          <button class="tab-btn" [class.active]="activeTab === 'warnings'" (click)="activeTab = 'warnings'">
+            ⚠️ Warning Signs
+          </button>
+        </div>
+
+        <!-- Tab: First Aid Steps -->
+        <div *ngIf="activeTab === 'steps'" class="tab-content">
+          <div
+            *ngFor="let step of result.first_aid_steps"
+            class="step-card"
+            [class.critical]="step.is_critical"
+          >
+            <div class="step-number" [class.critical-num]="step.is_critical">
+              {{ step.step_number }}
+            </div>
+            <div class="step-content">
+              <div class="step-instruction">{{ step.instruction }}</div>
+              <div *ngIf="step.is_critical" class="critical-badge">⚡ Critical Step</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Do's & Don'ts -->
+        <div *ngIf="activeTab === 'dos'" class="tab-content">
+          <div class="dos-donts-grid">
+            <div class="dos-card">
+              <h4 class="dos-title">✅ DO</h4>
+              <ul class="dos-list">
+                <li *ngFor="let item of result.do_list">{{ item }}</li>
+              </ul>
+            </div>
+            <div class="donts-card">
+              <h4 class="donts-title">❌ DON'T</h4>
+              <ul class="donts-list">
+                <li *ngFor="let item of result.dont_list">{{ item }}</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: Warning Signs -->
+        <div *ngIf="activeTab === 'warnings'" class="tab-content">
+          <p class="warnings-intro">Seek immediate medical help if you notice any of these signs:</p>
+          <div class="warnings-list">
+            <div *ngFor="let w of result.warning_signs" class="warning-item">
+              <span class="warning-icon">🚨</span>
+              <span>{{ w }}</span>
+            </div>
+          </div>
+
+          <div class="emergency-footer">
+            <div class="ef-title">When in doubt, call for help</div>
+            <div class="ef-buttons">
+              <a href="tel:108" class="ef-btn red">📞 108 — Ambulance</a>
+              <a href="tel:104" class="ef-btn blue">📞 104 — Medical Helpline</a>
+            </div>
+          </div>
+        </div>
+
+        <!-- Analyze Again Button -->
+        <button class="analyze-again-btn" (click)="clearImage()">
+          📸 Analyze Another Injury
+        </button>
+
+      </div><!-- /results-section -->
+
+    </div><!-- /results-panel -->
+
+  </div><!-- /page-layout -->
+</div>

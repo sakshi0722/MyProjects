@@ -1,0 +1,39 @@
+/* You can add global styles to this file, and also import other style files */
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(to right, #e3f2fd, #f5f7fa);
+}
+
+/* NAVBAR */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 40px;
+  background: #1565c0;
+  color: white;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.links a {
+  color: white;
+  text-decoration: none;
+  margin-left: 20px;
+  font-weight: 500;
+  transition: 0.3s;
+}
+
+.links a:hover {
+  color: #ffeb3b;
+}
+
+/* PAGE CONTAINER */
+.page-container {
+  padding: 40px;
+}

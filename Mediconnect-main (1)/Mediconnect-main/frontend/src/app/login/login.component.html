@@ -1,0 +1,73 @@
+<!-- login.component.html -->
+<div class="auth-wrapper">
+
+  <!-- Left Panel -->
+  <div class="auth-left">
+    <div class="brand-center">
+      <div class="logo-circle">
+        <span class="logo-cross">✚</span>
+      </div>
+      <h1 class="brand-name">MediConnect</h1>
+      <p class="brand-tagline">Your complete health companion</p>
+      <div class="brand-divider"></div>
+      <p class="brand-desc">Emergency response · AI injury analysis<br>Recovery planning · 24/7 health assistant</p>
+    </div>
+  </div>
+
+  <!-- Right Panel -->
+  <div class="auth-right">
+    <div class="auth-card">
+
+      <!-- Tabs -->
+      <div class="auth-tabs">
+        <button class="auth-tab" [class.active]="mode==='login'" (click)="switchMode('login')">Login</button>
+        <button class="auth-tab" [class.active]="mode==='register'" (click)="switchMode('register')">Register</button>
+      </div>
+
+      <h2 class="auth-title">{{ mode === 'login' ? 'Welcome back! 👋' : 'Create account 🌟' }}</h2>
+      <p class="auth-sub">{{ mode === 'login' ? 'Login to access your health dashboard' : 'Join MediConnect for free' }}</p>
+
+      <div *ngIf="errorMessage" class="error-msg">⚠️ {{ errorMessage }}</div>
+
+      <!-- Name (register only) -->
+      <div *ngIf="mode === 'register'" class="form-group">
+        <label>Full Name</label>
+        <input [(ngModel)]="name" placeholder="Enter your full name" class="auth-input"/>
+      </div>
+
+      <!-- Email -->
+      <div class="form-group">
+        <label>Email Address</label>
+        <input [(ngModel)]="email" type="email" placeholder="you@example.com" class="auth-input"/>
+      </div>
+
+      <!-- Password -->
+      <div class="form-group">
+        <label>Password</label>
+        <input [(ngModel)]="password" type="password" placeholder="Min. 6 characters" class="auth-input"
+          (keydown.enter)="onSubmit()"/>
+      </div>
+
+      <!-- Confirm Password (register only) -->
+      <div *ngIf="mode === 'register'" class="form-group">
+        <label>Confirm Password</label>
+        <input [(ngModel)]="confirmPassword" type="password" placeholder="Repeat your password" class="auth-input"
+          (keydown.enter)="onSubmit()"/>
+      </div>
+
+      <button class="auth-btn" (click)="onSubmit()" [disabled]="isLoading">
+        <span *ngIf="!isLoading">{{ mode === 'login' ? 'Login →' : 'Create Account →' }}</span>
+        <span *ngIf="isLoading">{{ mode === 'login' ? 'Logging in...' : 'Creating account...' }}</span>
+      </button>
+
+      <p class="auth-switch">
+        {{ mode === 'login' ? "Don't have an account?" : "Already have an account?" }}
+        <a (click)="switchMode(mode === 'login' ? 'register' : 'login')">
+          {{ mode === 'login' ? 'Register here' : 'Login here' }}
+        </a>
+      </p>
+
+    </div>
+  </div>
+
+</div>

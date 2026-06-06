@@ -1,0 +1,50 @@
+body {
+    font-family: Arial;
+    background: linear-gradient(to right,#36d1dc,#5b86e5);
+    display:flex;
+    justify-content:center;
+    padding:40px;
+}
+
+.container {
+    width:600px;
+    background:white;
+    padding:25px;
+    border-radius:10px;
+    box-shadow:0 8px 20px rgba(0,0,0,0.3);
+}
+
+h1 { text-align:center; }
+
+input, select {
+    width:100%;
+    padding:8px;
+    margin:6px 0;
+}
+
+button {
+    width:100%;
+    padding:10px;
+    background:#5b86e5;
+    color:white;
+    border:none;
+}
+
+.result {
+    margin-top:20px;
+    padding:15px;
+    background:#e6f2ff;
+}
+
+.progress-bar {
+    width:100%;
+    background:#ddd;
+    border-radius:5px;
+}
+
+.progress {
+    background:#36d1dc;
+    height:25px;
+    text-align:center;
+    color:white;
+}
